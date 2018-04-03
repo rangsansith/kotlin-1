@@ -84,6 +84,7 @@ class ImportedWeigher(private val classifier: ImportableFqNameClassifier) : Look
         currentPackage,
         preciseImport,
         defaultImport,
+        lowPriorityDefaultImport,
         allUnderImport
     }
 
@@ -93,6 +94,7 @@ class ImportedWeigher(private val classifier: ImportableFqNameClassifier) : Look
         return when (classifier.classify(fqName, o is PackageLookupObject)) {
             ImportableFqNameClassifier.Classification.fromCurrentPackage -> Weight.currentPackage
             ImportableFqNameClassifier.Classification.defaultImport -> Weight.defaultImport
+            ImportableFqNameClassifier.Classification.lowPriorityDefaultImport -> Weight.lowPriorityDefaultImport
             ImportableFqNameClassifier.Classification.preciseImport -> Weight.preciseImport
             ImportableFqNameClassifier.Classification.allUnderImport -> Weight.allUnderImport
             else -> null

@@ -16,7 +16,6 @@
 
 package org.jetbrains.kotlin.idea.core
 
-import org.jetbrains.kotlin.builtins.DefaultBuiltIns
 import org.jetbrains.kotlin.idea.util.ImportInsertHelper
 import org.jetbrains.kotlin.load.java.components.JavaAnnotationMapper
 import org.jetbrains.kotlin.name.FqName
@@ -52,6 +51,7 @@ class ImportableFqNameClassifier(private val file: KtFile) {
         topLevelPackage,
         preciseImport,
         defaultImport,
+        lowPriorityDefaultImport,
         allUnderImport,
         siblingImported,
         notImported,
@@ -69,14 +69,18 @@ class ImportableFqNameClassifier(private val file: KtFile) {
             }
         }
 
+        val importInsertHelper = ImportInsertHelper.getInstance(file.project)
+
         return when {
             isJavaClassNotToBeUsedInKotlin(fqName) -> Classification.notToBeUsedInKotlin
 
             fqName.parent() == file.packageFqName -> Classification.fromCurrentPackage
 
-            ImportInsertHelper.getInstance(file.project).isImportedWithDefault(importPath, file) -> Classification.defaultImport
-
             isImportedWithPreciseImport(fqName) -> Classification.preciseImport
+
+            importInsertHelper.isImportedWithLowPriorityDefaultImport(importPath, file) -> Classification.lowPriorityDefaultImport
+
+            importInsertHelper.isImportedWithDefault(importPath, file) -> Classification.defaultImport
 
             isImportedWithAllUnderImport(fqName) -> Classification.allUnderImport
 

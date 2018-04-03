@@ -38,7 +38,6 @@ import org.jetbrains.kotlin.types.expressions.OperatorConventions
 import org.jetbrains.kotlin.util.collectionUtils.concat
 import org.jetbrains.kotlin.utils.Printer
 import org.jetbrains.kotlin.utils.addToStdlib.flatMapToNullable
-import java.util.*
 
 interface IndexedImports {
     val imports: List<KtImportDirective>
@@ -208,6 +207,7 @@ class LazyImportResolver(
 class LazyImportScope(
     override val parent: ImportingScope?,
     private val importResolver: LazyImportResolver,
+    private val secondaryClassImportResolver: LazyImportResolver?,
     private val filteringKind: LazyImportScope.FilteringKind,
     private val debugName: String
 ) : ImportingScope {
@@ -218,19 +218,23 @@ class LazyImportScope(
         INVISIBLE_CLASSES
     }
 
-    private fun isClassifierVisible(descriptor: ClassifierDescriptor): Boolean {
+    private fun LazyImportResolver.isClassifierVisible(descriptor: ClassifierDescriptor): Boolean {
         if (filteringKind == FilteringKind.ALL) return true
 
-        if (importResolver.deprecationResolver.isHiddenInResolution(descriptor)) return false
+        if (deprecationResolver.isHiddenInResolution(descriptor)) return false
 
         val visibility = (descriptor as DeclarationDescriptorWithVisibility).visibility
         val includeVisible = filteringKind == FilteringKind.VISIBLE_CLASSES
         if (!visibility.mustCheckInImports()) return includeVisible
-        return Visibilities.isVisibleIgnoringReceiver(descriptor, importResolver.moduleDescriptor) == includeVisible
+        return Visibilities.isVisibleIgnoringReceiver(descriptor, moduleDescriptor) == includeVisible
     }
 
     override fun getContributedClassifier(name: Name, location: LookupLocation): ClassifierDescriptor? {
-        return importResolver.selectSingleFromImports(name) { scope, name ->
+        return importResolver.getClassifier(name, location) ?: secondaryClassImportResolver?.getClassifier(name, location)
+    }
+
+    private fun LazyImportResolver.getClassifier(name: Name, location: LookupLocation): ClassifierDescriptor? {
+        return selectSingleFromImports(name) { scope, _ ->
             val descriptor = scope.getContributedClassifier(name, location)
             if ((descriptor is ClassDescriptor || descriptor is TypeAliasDescriptor) && isClassifierVisible(descriptor))
                 descriptor
@@ -239,16 +243,17 @@ class LazyImportScope(
         }
     }
 
-    override fun getContributedPackage(name: Name) = null
+    override fun getContributedPackage(name: Name): PackageViewDescriptor? = null
 
     override fun getContributedVariables(name: Name, location: LookupLocation): Collection<VariableDescriptor> {
         if (filteringKind == FilteringKind.INVISIBLE_CLASSES) return listOf()
-        return importResolver.collectFromImports(name) { scope, name -> scope.getContributedVariables(name, location) }
+        return importResolver.collectFromImports(name) { scope, _ -> scope.getContributedVariables(name, location) }
     }
 
     override fun getContributedFunctions(name: Name, location: LookupLocation): Collection<FunctionDescriptor> {
         if (filteringKind == FilteringKind.INVISIBLE_CLASSES) return listOf()
-        return importResolver.collectFromImports(name) { scope, name -> scope.getContributedFunctions(name, location) }
+        return importResolver.collectFromImports(name) { scope, _ -> scope.getContributedFunctions(name, location) } +
+                secondaryClassImportResolver?.collectFromImports(name) { scope, _ -> scope.getContributedFunctions(name, location) }.orEmpty()
     }
 
     override fun getContributedDescriptors(
@@ -259,26 +264,49 @@ class LazyImportScope(
         // we do not perform any filtering by visibility here because all descriptors from both visible/invisible filter scopes are to be added anyway
         if (filteringKind == FilteringKind.INVISIBLE_CLASSES) return listOf()
 
-        return importResolver.storageManager.compute {
-            val descriptors = LinkedHashSet<DeclarationDescriptor>()
+        val storageManager = importResolver.storageManager
+        if (secondaryClassImportResolver != null) {
+            assert(storageManager === secondaryClassImportResolver.storageManager) { "Multiple storage managers are not supported" }
+        }
+
+        return storageManager.compute {
+            val result = linkedSetOf<DeclarationDescriptor>()
+            val importedNames = if (secondaryClassImportResolver == null) null else hashSetOf<Name>()
+
             for (directive in importResolver.indexedImports.imports) {
                 val importPath = directive.importPath ?: continue
                 val importedName = importPath.importedName
                 if (importedName == null || nameFilter(importedName)) {
-                    descriptors.addAll(
-                        importResolver.getImportScope(directive).getContributedDescriptors(
-                            kindFilter,
-                            nameFilter,
-                            changeNamesForAliased
-                        )
-                    )
+                    val newDescriptors =
+                        importResolver.getImportScope(directive).getContributedDescriptors(kindFilter, nameFilter, changeNamesForAliased)
+                    result.addAll(newDescriptors)
+
+                    if (importedNames != null) {
+                        for (descriptor in newDescriptors) {
+                            importedNames.add(descriptor.name)
+                        }
+                    }
                 }
             }
-            descriptors
+
+            secondaryClassImportResolver?.let { resolver ->
+                for (directive in resolver.indexedImports.imports) {
+                    val newDescriptors =
+                        resolver.getImportScope(directive).getContributedDescriptors(kindFilter, nameFilter, changeNamesForAliased)
+
+                    for (descriptor in newDescriptors) {
+                        if (descriptor.name !in importedNames!!) {
+                            result.add(descriptor)
+                        }
+                    }
+                }
+            }
+
+            result
         }
     }
 
-    override fun toString() = "LazyImportScope: " + debugName
+    override fun toString() = "LazyImportScope: $debugName"
 
     override fun printStructure(p: Printer) {
         p.println(this::class.java.simpleName, ": ", debugName, " {")
@@ -288,11 +316,12 @@ class LazyImportScope(
         p.println("}")
     }
 
-    override fun definitelyDoesNotContainName(name: Name) = importResolver.definitelyDoesNotContainName(name)
+    override fun definitelyDoesNotContainName(name: Name): Boolean =
+        importResolver.definitelyDoesNotContainName(name) && secondaryClassImportResolver?.definitelyDoesNotContainName(name) != false
 
     override fun recordLookup(name: Name, location: LookupLocation) {
         importResolver.recordLookup(name, location)
     }
 
-    override fun computeImportedNames() = importResolver.allNames
+    override fun computeImportedNames(): Set<Name>? = importResolver.allNames?.union(secondaryClassImportResolver?.allNames.orEmpty())
 }
