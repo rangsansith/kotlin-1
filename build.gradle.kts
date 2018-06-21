@@ -305,7 +305,7 @@ allprojects {
 
     configureJvmProject(javaHome!!, jvmTarget!!)
 
-    val commonCompilerArgs = listOf("-Xallow-kotlin-package", "-Xread-deserialized-contracts")
+    val commonCompilerArgs = listOf("-Xallow-kotlin-package", "-Xread-deserialized-contracts", "-XXLanguage:-ReleaseCoroutines")
 
     tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinCompile<*>> {
         kotlinOptions {
