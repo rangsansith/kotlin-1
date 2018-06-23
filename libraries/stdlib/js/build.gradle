@@ -9,6 +9,7 @@ apply plugin: 'idea'
 
 configureDist(project)
 configurePublishing(project)
+configureLibraryLanguageVersion(project)
 
 
 def builtinsSrcDir = "${buildDir}/builtin-sources"

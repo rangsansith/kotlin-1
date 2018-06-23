@@ -1,5 +1,8 @@
 apply plugin: 'kotlin'
 
+configureLibraryLanguageVersion(project)
+
+
 configurations {
     testArtifacts
 }

@@ -52,6 +52,14 @@ ext.configureJvm6Project = { Project project ->
     }
 }
 
+ext.configureLibraryLanguageVersion = { Project project ->
+    project.tasks.withType(Class.forName('org.jetbrains.kotlin.gradle.dsl.KotlinCompile', true, project.rootProject.buildscript.classLoader)) {
+        kotlinOptions.languageVersion = "1.3"
+        kotlinOptions.apiVersion = "1.3"
+    }
+    project.ext.kotlinLanguageVersion = "1.3"
+}
+
 ext.compileJava9Sources = { Project project, String moduleName, Collection<FileCollection> moduleOutputs = [project.sourceSets.main.output] ->
     // module-info.java should be in java9 source set by convention
     SourceDirectorySet java9SourceSet = project.sourceSets.java9.java

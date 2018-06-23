@@ -3,6 +3,7 @@ description = ''
 apply plugin: 'kotlin'
 
 configureJvm6Project(project)
+configureLibraryLanguageVersion(project)
 
 sourceSets {
     main {

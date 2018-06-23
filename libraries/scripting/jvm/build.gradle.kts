@@ -6,6 +6,7 @@ plugins {
 }
 
 jvmTarget = "1.6"
+callGroovy("configureLibraryLanguageVersion", project)
 
 dependencies {
     compile(project(":kotlin-script-runtime"))

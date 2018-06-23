@@ -13,6 +13,8 @@ dependencies {
 // package.json contains direct links to the builddir
 buildDir = "$projectDir/build"
 
+configureLibraryLanguageVersion(project)
+
 [compileKotlin2Js, compileTestKotlin2Js]*.configure {
     kotlinOptions.moduleKind = "commonjs"
 }

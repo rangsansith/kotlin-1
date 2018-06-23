@@ -4,6 +4,7 @@ apply plugin: 'kotlin-platform-js'
 
 configureDist(project)
 configurePublishing(project)
+configureLibraryLanguageVersion(project)
 
 dependencies {
     expectedBy project(':kotlin-test:kotlin-test-common')

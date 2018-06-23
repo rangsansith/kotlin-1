@@ -5,6 +5,7 @@ apply plugin: 'kotlin-platform-jvm'
 configureJvm6Project(project)
 configureDist(project)
 configurePublishing(project)
+configureLibraryLanguageVersion(project)
 ext.javaHome = JDK_18
 ext.jvmTarget = "1.8"
 

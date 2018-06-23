@@ -8,6 +8,7 @@ archivesBaseName = 'kotlin-stdlib'
 configureJvm6Project(project)
 configureDist(project)
 configurePublishing(project)
+configureLibraryLanguageVersion(project)
 
 pill {
     importAsLibrary = true

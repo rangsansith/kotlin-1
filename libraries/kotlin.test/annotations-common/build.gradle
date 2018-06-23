@@ -5,6 +5,7 @@ apply plugin: 'pill-configurable'
 
 configureDist(project)
 configurePublishing(project)
+configureLibraryLanguageVersion(project)
 
 
 dependencies {

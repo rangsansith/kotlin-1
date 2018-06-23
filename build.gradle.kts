@@ -80,7 +80,7 @@ val defaultSnapshotVersion: String by extra
 val buildNumber by extra(findProperty("build.number")?.toString() ?: defaultSnapshotVersion)
 val kotlinVersion by extra(findProperty("deployVersion")?.toString() ?: buildNumber)
 
-val kotlinLanguageVersion by extra("1.3")
+val kotlinLanguageVersion by extra("1.2")
 
 allprojects {
     group = "org.jetbrains.kotlin"
@@ -305,7 +305,7 @@ allprojects {
 
     configureJvmProject(javaHome!!, jvmTarget!!)
 
-    val commonCompilerArgs = listOf("-Xallow-kotlin-package", "-Xread-deserialized-contracts", "-XXLanguage:-ReleaseCoroutines")
+    val commonCompilerArgs = listOf("-Xallow-kotlin-package", "-Xread-deserialized-contracts", "-XXLanguage:-ReleaseCoroutines", "-Xskip-metadata-version-check")
 
     tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinCompile<*>> {
         kotlinOptions {

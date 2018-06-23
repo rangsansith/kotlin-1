@@ -6,6 +6,7 @@ apply plugin: 'pill-configurable'
 configureJvm6Project(project)
 configureDist(project)
 configurePublishing(project)
+configureLibraryLanguageVersion(project)
 
 pill {
     importAsLibrary = true
