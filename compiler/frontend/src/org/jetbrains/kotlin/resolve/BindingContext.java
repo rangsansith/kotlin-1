@@ -200,10 +200,8 @@ public interface BindingContext {
 
             if (getter == null) return true;
             if (propertyDescriptor.isVar() && setter == null) return true;
-            if (declarationPsiElement != null) {
-                if (setter != null && !DescriptorPsiUtilsKt.hasBody(setter) && setter.getModality() != Modality.ABSTRACT) return true;
-                if (!DescriptorPsiUtilsKt.hasBody(getter) && getter.getModality() != Modality.ABSTRACT) return true;
-            }
+            if (setter != null && !DescriptorPsiUtilsKt.hasBody(setter) && setter.getModality() != Modality.ABSTRACT) return true;
+            if (!DescriptorPsiUtilsKt.hasBody(getter) && getter.getModality() != Modality.ABSTRACT) return true;
 
             return backingFieldRequired;
         }
