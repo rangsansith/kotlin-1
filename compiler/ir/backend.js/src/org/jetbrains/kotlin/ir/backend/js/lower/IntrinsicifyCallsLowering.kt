@@ -17,9 +17,7 @@ import org.jetbrains.kotlin.ir.backend.js.utils.OperatorNames
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
-import org.jetbrains.kotlin.ir.expressions.IrCall
-import org.jetbrains.kotlin.ir.expressions.IrExpression
-import org.jetbrains.kotlin.ir.expressions.copyTypeArgumentsFrom
+import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
 import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
@@ -202,6 +200,22 @@ class IntrinsicifyCallsLowering(private val context: JsIrBackendContext) : FileL
 
     override fun lower(irFile: IrFile) {
         irFile.transform(object : IrElementTransformerVoid() {
+            override fun <T> visitConst(expression: IrConst<T>): IrExpression {
+                if (expression.kind is IrConstKind.Long) {
+                    val value = IrConstKind.Long.valueOf(expression)
+                    val high = (value shr 32).toInt()
+                    val low = value.toInt()
+                    return IrCallImpl(
+                        expression.startOffset,
+                        expression.endOffset,
+                        context.intrinsics.longConstructor).apply {
+                        putValueArgument(0, JsIrBuilder.buildInt(context.irBuiltIns.int, low))
+                        putValueArgument(1, JsIrBuilder.buildInt(context.irBuiltIns.int, high))
+                    }
+                }
+                return super.visitConst(expression)
+            }
+
             override fun visitCall(expression: IrCall): IrExpression {
                 val call = super.visitCall(expression)
 

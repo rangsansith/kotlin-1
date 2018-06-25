@@ -14,6 +14,7 @@ import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.descriptors.IrBuiltIns
 import org.jetbrains.kotlin.ir.util.DeclarationStubGenerator
 import org.jetbrains.kotlin.js.resolve.JsPlatform.builtIns
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.types.KotlinType
 import org.jetbrains.kotlin.types.KotlinTypeFactory
@@ -112,6 +113,7 @@ class JsIntrinsics(
     val jsEquals = getInternalFunction("equals")
 
 
+    val longConstructor= context.symbolTable.referenceConstructor(context.getClass(FqName("kotlin.Long")).constructors.single())
 
     // Helpers:
 
