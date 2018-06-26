@@ -219,6 +219,17 @@ class IntrinsicifyCallsLowering(private val context: JsIrBackendContext) : FileL
                 if (call is IrCall) {
                     val symbol = call.symbol
 
+                    if (symbol == irBuiltIns.eqeqSymbol) {
+                        val lhs = call.getValueArgument(0)!!
+                        val rhs = call.getValueArgument(1)!!
+
+                        return when (translateEquals(lhs.type, rhs.type)) {
+                            is IdentityOperator -> irCall(call, intrinsics.jsEqeqeq.symbol)
+                            is EqualityOperator -> irCall(call, intrinsics.jsEqeq.symbol)
+                            else -> irCall(call, intrinsics.jsEquals)
+                        }
+                    }
+
                     symbolToIrFunction[symbol]?.let {
                         return irCall(call, it.symbol)
                     }
