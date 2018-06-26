@@ -86,7 +86,7 @@ class IntrinsicifyCallsLowering(private val context: JsIrBackendContext) : FileL
             }
 
             // Conversion rules are ported from NumberAndCharConversionFIF
-            // TODO: Add Char, Long and Number conversions
+            // TODO: Add Char and Number conversions
 
             irBuiltIns.byte.let {
                 op(it, ConversionNames.TO_BYTE, intrinsics.jsAsIs)
