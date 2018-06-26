@@ -94,14 +94,7 @@ class IntrinsicifyCallsLowering(private val context: JsIrBackendContext) : FileL
                 op(it, ConversionNames.TO_FLOAT, intrinsics.jsAsIs)
                 op(it, ConversionNames.TO_INT, intrinsics.jsAsIs)
                 op(it, ConversionNames.TO_SHORT, intrinsics.jsAsIs)
-            }
-
-            irBuiltIns.double.let {
-                op(it, ConversionNames.TO_BYTE, intrinsics.jsNumberToByte)
-                op(it, ConversionNames.TO_DOUBLE, intrinsics.jsAsIs)
-                op(it, ConversionNames.TO_FLOAT, intrinsics.jsAsIs)
-                op(it, ConversionNames.TO_INT, intrinsics.jsNumberToInt)
-                op(it, ConversionNames.TO_SHORT, intrinsics.jsNumberToShort)
+                op(it, ConversionNames.TO_LONG, intrinsics.jsToLong)
             }
 
             for (type in listOf(irBuiltIns.float, irBuiltIns.double)) {
@@ -110,6 +103,7 @@ class IntrinsicifyCallsLowering(private val context: JsIrBackendContext) : FileL
                 op(type, ConversionNames.TO_FLOAT, intrinsics.jsAsIs)
                 op(type, ConversionNames.TO_INT, intrinsics.jsNumberToInt)
                 op(type, ConversionNames.TO_SHORT, intrinsics.jsNumberToShort)
+                op(type, ConversionNames.TO_LONG, intrinsics.jsNumberToLong)
             }
 
             irBuiltIns.int.let {
@@ -118,6 +112,7 @@ class IntrinsicifyCallsLowering(private val context: JsIrBackendContext) : FileL
                 op(it, ConversionNames.TO_FLOAT, intrinsics.jsAsIs)
                 op(it, ConversionNames.TO_INT, intrinsics.jsAsIs)
                 op(it, ConversionNames.TO_SHORT, intrinsics.jsToShort)
+                op(it, ConversionNames.TO_LONG, intrinsics.jsToLong)
             }
 
             irBuiltIns.short.let {
@@ -126,6 +121,7 @@ class IntrinsicifyCallsLowering(private val context: JsIrBackendContext) : FileL
                 op(it, ConversionNames.TO_FLOAT, intrinsics.jsAsIs)
                 op(it, ConversionNames.TO_INT, intrinsics.jsAsIs)
                 op(it, ConversionNames.TO_SHORT, intrinsics.jsAsIs)
+                op(it, ConversionNames.TO_LONG, intrinsics.jsToLong)
             }
         }
 

@@ -97,8 +97,10 @@ class JsIntrinsics(
     val jsNumberToDouble = getInternalFunction("numberToDouble")
     val jsNumberToInt = getInternalFunction("numberToInt")
     val jsNumberToShort = getInternalFunction("numberToShort")
+    val jsNumberToLong = getInternalFunction("numberToLong")
     val jsToByte = getInternalFunction("toByte")
     val jsToShort = getInternalFunction("toShort")
+    val jsToLong = getInternalFunction("toLong")
 
 
     // Other:
