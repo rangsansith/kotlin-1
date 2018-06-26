@@ -181,7 +181,7 @@ class IntrinsicifyCallsLowering(private val context: JsIrBackendContext) : FileL
             )
 
             addWithPredicate(
-                Name.identifier("toString"), { call -> shouldReplaceToStringWithRuntimeCall(call) && call.symbol.owner.descriptor.isFakeOverriddenFromAny() },
+                Name.identifier("toString"), ::shouldReplaceToStringWithRuntimeCall,
                 { call -> irCall(call, intrinsics.jsToString, dispatchReceiverAsFirstArgument = true) }
             )
 
@@ -204,7 +204,8 @@ class IntrinsicifyCallsLowering(private val context: JsIrBackendContext) : FileL
                     return IrCallImpl(
                         expression.startOffset,
                         expression.endOffset,
-                        context.intrinsics.longConstructor).apply {
+                        context.intrinsics.longConstructor
+                    ).apply {
                         putValueArgument(0, JsIrBuilder.buildInt(context.irBuiltIns.int, low))
                         putValueArgument(1, JsIrBuilder.buildInt(context.irBuiltIns.int, high))
                     }
@@ -233,6 +234,43 @@ class IntrinsicifyCallsLowering(private val context: JsIrBackendContext) : FileL
                                     return call.dispatchReceiver!!
                                 }
                                 // TODO: don't apply intrinsics when type of receiver or argument is Long
+                                if (call.valueArgumentsCount == 1) {
+                                    call.getValueArgument(0)?.let { arg ->
+                                        if (arg.type.isLong()) {
+                                            call.dispatchReceiver?.type?.let {
+                                                if (it.isDouble()) {
+                                                    call.putValueArgument(0, IrCallImpl(
+                                                        call.startOffset,
+                                                        call.endOffset,
+                                                        context.intrinsics.longToDouble
+                                                    ).apply {
+                                                        dispatchReceiver = arg
+                                                    })
+                                                } else if (it.isFloat()) {
+                                                    call.putValueArgument(0, IrCallImpl(
+                                                        call.startOffset,
+                                                        call.endOffset,
+                                                        context.intrinsics.longToFloat
+                                                    ).apply {
+                                                        dispatchReceiver = arg
+                                                    })
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+
+                                if (call.valueArgumentsCount == 1 && call.getValueArgument(0)!!.type.isLong()) {
+                                    call.dispatchReceiver = IrCallImpl(
+                                        call.startOffset,
+                                        call.endOffset,
+                                        intrinsics.jsNumberToLong
+                                    ).apply {
+                                        putValueArgument(0, call.dispatchReceiver)
+                                    }
+                                    return call
+                                }
                                 return irCall(call, it, dispatchReceiverAsFirstArgument = true)
                             }
 
@@ -281,7 +319,8 @@ fun CallableMemberDescriptor.isFakeOverriddenFromAny(): Boolean {
 }
 
 fun shouldReplaceToStringWithRuntimeCall(call: IrCall): Boolean {
-    if (call.superQualifier != null) return false
+    if (call.superQualifier != null || !call.symbol.owner.descriptor.isFakeOverriddenFromAny()) return false
+
     return call.symbol.owner.dispatchReceiverParameter?.type?.run {
         KotlinBuiltIns.isArray(this)
                 || this.isAnyOrNullableAny()
@@ -332,59 +371,59 @@ class RuntimeFunctionCall : EqualityLoweringType()
 class RuntimeOrMethodCall : EqualityLoweringType()
 
 fun translateEquals(lhs: KotlinType, rhs: KotlinType): EqualityLoweringType = when {
-    lhs.isJsNumber()         -> translateEqualsForJsNumber(rhs)
+    lhs.isJsNumber() -> translateEqualsForJsNumber(rhs)
     lhs.isNullableJsNumber() -> translateEqualsForNullableJsNumber(rhs)
-    lhs.isLong()             -> translateEqualsForLong(rhs)
-    lhs.isNullableLong()     -> translateEqualsForNullableLong(rhs)
-    lhs.isBoolean()          -> translateEqualsForBoolean(rhs)
-    lhs.isNullableBoolean()  -> translateEqualsForNullableBoolean(rhs)
-    else                     -> RuntimeOrMethodCall()
+    lhs.isLong() -> translateEqualsForLong(rhs)
+    lhs.isNullableLong() -> translateEqualsForNullableLong(rhs)
+    lhs.isBoolean() -> translateEqualsForBoolean(rhs)
+    lhs.isNullableBoolean() -> translateEqualsForNullableBoolean(rhs)
+    else -> RuntimeOrMethodCall()
 }
 
 fun translateEqualsForJsNumber(rhs: KotlinType): EqualityLoweringType = when {
     rhs.isJsNumber() || rhs.isNullableJsNumber() -> IdentityOperator()
-    rhs.isLong() || rhs.isNullableLong()         -> EqualityOperator()
-    rhs.isBooleanOrNullableBoolean()             -> IdentityOperator()
-    else                                         -> RuntimeFunctionCall()
+    rhs.isLong() || rhs.isNullableLong() -> EqualityOperator()
+    rhs.isBooleanOrNullableBoolean() -> IdentityOperator()
+    else -> RuntimeFunctionCall()
 }
 
 fun translateEqualsForNullableJsNumber(rhs: KotlinType): EqualityLoweringType = when {
-    rhs.isJsNumber()                             -> IdentityOperator()
-    rhs.isNullableJsNumber()                     -> EqualityOperator()
-    rhs.isLong() || rhs.isNullableLong()         -> EqualityOperator()
-    rhs.isBoolean()                              -> IdentityOperator()
-    else                                         -> RuntimeFunctionCall()
+    rhs.isJsNumber() -> IdentityOperator()
+    rhs.isNullableJsNumber() -> EqualityOperator()
+    rhs.isLong() || rhs.isNullableLong() -> EqualityOperator()
+    rhs.isBoolean() -> IdentityOperator()
+    else -> RuntimeFunctionCall()
 }
 
 fun translateEqualsForLong(rhs: KotlinType): EqualityLoweringType = when {
     rhs.isJsNumber() || rhs.isNullableJsNumber() -> EqualityOperator()
-    rhs.isLong() || rhs.isNullableLong()         -> RuntimeFunctionCall()
-    rhs.isBooleanOrNullableBoolean()             -> IdentityOperator()
-    else                                         -> RuntimeFunctionCall()
+    rhs.isLong() || rhs.isNullableLong() -> RuntimeFunctionCall()
+    rhs.isBooleanOrNullableBoolean() -> IdentityOperator()
+    else -> RuntimeFunctionCall()
 }
 
 fun translateEqualsForNullableLong(rhs: KotlinType): EqualityLoweringType = when {
     rhs.isJsNumber() || rhs.isNullableJsNumber() -> EqualityOperator()
-    rhs.isLong() || rhs.isNullableLong()         -> RuntimeFunctionCall()
-    rhs.isBoolean()                              -> IdentityOperator()
-    else                                         -> RuntimeFunctionCall()
+    rhs.isLong() || rhs.isNullableLong() -> RuntimeFunctionCall()
+    rhs.isBoolean() -> IdentityOperator()
+    else -> RuntimeFunctionCall()
 }
 
 fun translateEqualsForBoolean(rhs: KotlinType): EqualityLoweringType = when {
     rhs.isJsNumber() || rhs.isNullableJsNumber() -> IdentityOperator()
-    rhs.isLong() || rhs.isNullableLong()         -> IdentityOperator()
-    rhs.isBooleanOrNullableBoolean()             -> IdentityOperator()
-    else                                         -> RuntimeFunctionCall()
+    rhs.isLong() || rhs.isNullableLong() -> IdentityOperator()
+    rhs.isBooleanOrNullableBoolean() -> IdentityOperator()
+    else -> RuntimeFunctionCall()
 }
 
 fun translateEqualsForNullableBoolean(rhs: KotlinType): EqualityLoweringType = when {
-    rhs.isJsNumber()                             -> IdentityOperator()
-    rhs.isNullableJsNumber()                     -> RuntimeFunctionCall()
-    rhs.isLong()                                 -> IdentityOperator()
-    rhs.isNullableLong()                         -> RuntimeFunctionCall()
-    rhs.isBoolean()                              -> IdentityOperator()
-    rhs.isNullableBoolean()                      -> EqualityOperator()
-    else                                         -> RuntimeFunctionCall()
+    rhs.isJsNumber() -> IdentityOperator()
+    rhs.isNullableJsNumber() -> RuntimeFunctionCall()
+    rhs.isLong() -> IdentityOperator()
+    rhs.isNullableLong() -> RuntimeFunctionCall()
+    rhs.isBoolean() -> IdentityOperator()
+    rhs.isNullableBoolean() -> EqualityOperator()
+    else -> RuntimeFunctionCall()
 }
 
 private fun KotlinType.isNullableBoolean(): Boolean = isBooleanOrNullableBoolean() && isNullable()
@@ -460,7 +499,11 @@ private fun <V> MutableMap<IrFunctionSymbol, V>.add(from: IrFunctionSymbol, to: 
     put(from, to)
 }
 
-private fun <K> MutableMap<K, (IrCall) -> IrExpression>.addWithPredicate(from: K, predicate: (IrCall) -> Boolean, action: (IrCall) -> IrExpression) {
+private fun <K> MutableMap<K, (IrCall) -> IrExpression>.addWithPredicate(
+    from: K,
+    predicate: (IrCall) -> Boolean,
+    action: (IrCall) -> IrExpression
+) {
     put(from) { call: IrCall -> select({ predicate(call) }, { action(call) }, { call }) }
 }
 

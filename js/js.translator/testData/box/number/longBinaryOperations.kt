@@ -1,18 +1,19 @@
+// IGNORE_BACKEND: JS_IR
 // EXPECTED_REACHABLE_NODES: 1114
 package foo
-//
-//fun fact(n: Int): Long = if (n == 1) 1L else n * fact(n - 1)
-//
-//fun fib(n: Int): Long {
-//    var a = 0L
-//    var b = 1L
-//    for (i in 2..n) {
-//        var tmp = a
-//        a = b
-//        b = b + tmp
-//    }
-//    return b
-//}
+
+fun fact(n: Int): Long = if (n == 1) 1L else n * fact(n - 1)
+
+fun fib(n: Int): Long {
+    var a = 0L
+    var b = 1L
+    for (i in 2..n) {
+        var tmp = a
+        a = b
+        b = b + tmp
+    }
+    return b
+}
 
 fun box(): String {
 
@@ -46,9 +47,9 @@ fun box(): String {
     assertEquals(2L, 100L % 7)
     assertEquals(2L, 100 % 7L)
 
-//    assertEquals(2432902008176640000L, fact(20))
-//    assertEquals(12586269025L, fib(50))
-//    assertEquals(7540113804746346429L, fib(92))
+    assertEquals(2432902008176640000L, fact(20))
+    assertEquals(12586269025L, fib(50))
+    assertEquals(7540113804746346429L, fib(92))
 
     return "OK"
 }
