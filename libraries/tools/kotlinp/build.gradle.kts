@@ -49,4 +49,9 @@ tasks {
     "assemble" {
         dependsOn(shadowJar)
     }
+    "test" {
+        // These dependencies are needed because ForTestCompileRuntime loads jars from dist
+        dependsOn(":kotlin-reflect:dist")
+        dependsOn(":kotlin-script-runtime:dist")
+    }
 }
