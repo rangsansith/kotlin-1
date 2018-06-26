@@ -132,7 +132,7 @@ class IntrinsicifyCallsLowering(private val context: JsIrBackendContext) : FileL
         symbolToIrFunction.run {
             add(irBuiltIns.eqeqeqSymbol, intrinsics.jsEqeqeq)
             // TODO: implement it a right way
-            add(irBuiltIns.eqeqSymbol, intrinsics.jsEqeq)
+            add(irBuiltIns.eqeqSymbol, intrinsics.jsEquals.owner)
             // TODO: implement it a right way
             add(irBuiltIns.ieee754equalsFunByOperandType, intrinsics.jsEqeqeq)
 
@@ -185,7 +185,7 @@ class IntrinsicifyCallsLowering(private val context: JsIrBackendContext) : FileL
             )
 
             addWithPredicate(
-                Name.identifier("toString"), ::shouldReplaceToStringWithRuntimeCall,
+                Name.identifier("toString"), { call -> shouldReplaceToStringWithRuntimeCall(call) && call.symbol.owner.descriptor.isFakeOverriddenFromAny() },
                 { call -> irCall(call, intrinsics.jsToString, dispatchReceiverAsFirstArgument = true) }
             )
 

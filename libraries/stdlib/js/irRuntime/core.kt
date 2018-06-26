@@ -6,11 +6,11 @@
 package kotlin.js
 
 fun equals(obj1: dynamic, obj2: dynamic): Boolean {
-    if (obj1 == null) {
-        return obj2 == null
+    if (obj1 === null) {
+        return obj2 === null
     }
 
-    if (obj2 == null) {
+    if (obj2 === null) {
         return false
     }
 
@@ -31,7 +31,7 @@ fun equals(obj1: dynamic, obj2: dynamic): Boolean {
 }
 
 fun toString(o: dynamic): String = when {
-    o == null -> "null"
+    o === null -> "null"
     isArrayish(o) -> "[...]"
     else -> js("o.toString()").unsafeCast<String>()
 }
