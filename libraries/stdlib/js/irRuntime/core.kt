@@ -6,15 +6,16 @@
 package kotlin.js
 
 fun equals(obj1: dynamic, obj2: dynamic): Boolean {
-    if (js("obj1 == null").unsafeCast<Boolean>()) {
-        return js("obj2 == null").unsafeCast<Boolean>()
-    }
 
-    if (js("obj2 == null").unsafeCast<Boolean>()) {
-        return false
+    if (obj1 == null) {
+        return obj2 == null;
+    }
+    if (obj2 == null) {
+        return false;
     }
 
     return js("""
+
     if (typeof obj1 === "object" && typeof obj1.equals_Any_ === "function") {
         return obj1.equals_Any_(obj2);
     }
