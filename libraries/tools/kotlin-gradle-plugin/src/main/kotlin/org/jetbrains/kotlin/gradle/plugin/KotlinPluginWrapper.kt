@@ -84,7 +84,7 @@ open class Kotlin2JsPluginWrapper @Inject constructor(fileResolver: FileResolver
 }
 
 fun Project.getKotlinPluginVersion(): String? =
-    plugins.firstIsInstanceOrNull<KotlinBasePluginWrapper>()?.kotlinPluginVersion
+    plugins.asSequence().mapNotNull { (it as? KotlinBasePluginWrapper)?.kotlinPluginVersion }.firstOrNull()
 
 private fun Any.loadKotlinVersionFromResource(log: Logger): String {
     log.kotlinDebug("Loading version information")
