@@ -321,10 +321,15 @@ class IntrinsicifyCallsLowering(private val context: JsIrBackendContext) : FileL
     }
 }
 
+// TODO find correct symbol and compare those
+fun CallableMemberDescriptor.isNullableAnyToString() = extensionReceiverParameter?.let {
+    it.value.type.isNullableAny() && name.toString() == "toString" && valueParameters.size == 0
+} ?: false
+
 // Return is method has no real implementation except fake overrides from Any
 fun CallableMemberDescriptor.isFakeOverriddenFromAny(): Boolean {
     if (kind.isReal) {
-        return (containingDeclaration is ClassDescriptor) && KotlinBuiltIns.isAny(containingDeclaration as ClassDescriptor)
+        return (containingDeclaration is ClassDescriptor) && KotlinBuiltIns.isAny(containingDeclaration as ClassDescriptor) || isNullableAnyToString()
     }
     return overriddenDescriptors.all { it.isFakeOverriddenFromAny() }
 }
