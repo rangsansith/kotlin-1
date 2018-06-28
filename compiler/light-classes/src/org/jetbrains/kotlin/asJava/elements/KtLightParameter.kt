@@ -61,7 +61,9 @@ class KtLightParameter(
             this.modifierList = KtLightSimpleModifierList(this, emptySet())
         }
         else {
-            this.modifierList = super.getModifierList()
+            this.modifierList = object : KtLightModifierList<KtLightParameter>(this) {
+                override fun hasModifierProperty(name: String): Boolean = super@KtLightParameter.getModifierList().hasModifierProperty(name)
+            }
         }
     }
 
