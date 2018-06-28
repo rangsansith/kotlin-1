@@ -1,6 +1,5 @@
 @kotlin.Metadata
 final class WhenUnitKt$box$1 {
-    field label: int
     inner class WhenUnitKt$box$1
     method <init>(p0: kotlin.coroutines.experimental.Continuation): void
     public final @org.jetbrains.annotations.NotNull method create(@org.jetbrains.annotations.NotNull p0: kotlin.coroutines.experimental.Continuation): kotlin.coroutines.experimental.Continuation

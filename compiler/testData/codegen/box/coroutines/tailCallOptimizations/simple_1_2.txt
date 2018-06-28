@@ -2,7 +2,6 @@
 final class SimpleKt$box$1 {
     synthetic final field $result: kotlin.jvm.internal.Ref$ObjectRef
     field L$0: java.lang.Object
-    field label: int
     inner class SimpleKt$box$1
     method <init>(p0: kotlin.jvm.internal.Ref$ObjectRef, p1: kotlin.coroutines.experimental.Continuation): void
     public final @org.jetbrains.annotations.NotNull method create(@org.jetbrains.annotations.NotNull p0: kotlin.coroutines.experimental.Continuation): kotlin.coroutines.experimental.Continuation
