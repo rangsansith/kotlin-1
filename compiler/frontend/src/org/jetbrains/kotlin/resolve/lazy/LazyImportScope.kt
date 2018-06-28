@@ -38,6 +38,7 @@ import org.jetbrains.kotlin.types.expressions.OperatorConventions
 import org.jetbrains.kotlin.util.collectionUtils.concat
 import org.jetbrains.kotlin.utils.Printer
 import org.jetbrains.kotlin.utils.addToStdlib.flatMapToNullable
+import org.jetbrains.kotlin.utils.ifEmpty
 
 interface IndexedImports {
     val imports: List<KtImportDirective>
@@ -247,13 +248,16 @@ class LazyImportScope(
 
     override fun getContributedVariables(name: Name, location: LookupLocation): Collection<VariableDescriptor> {
         if (filteringKind == FilteringKind.INVISIBLE_CLASSES) return listOf()
-        return importResolver.collectFromImports(name) { scope, _ -> scope.getContributedVariables(name, location) }
+        return importResolver.collectFromImports(name) { scope, _ -> scope.getContributedVariables(name, location) }.ifEmpty {
+            secondaryClassImportResolver?.collectFromImports(name) { scope, _ -> scope.getContributedVariables(name, location) }.orEmpty()
+        }
     }
 
     override fun getContributedFunctions(name: Name, location: LookupLocation): Collection<FunctionDescriptor> {
         if (filteringKind == FilteringKind.INVISIBLE_CLASSES) return listOf()
-        return importResolver.collectFromImports(name) { scope, _ -> scope.getContributedFunctions(name, location) } +
-                secondaryClassImportResolver?.collectFromImports(name) { scope, _ -> scope.getContributedFunctions(name, location) }.orEmpty()
+        return importResolver.collectFromImports(name) { scope, _ -> scope.getContributedFunctions(name, location) }.ifEmpty {
+            secondaryClassImportResolver?.collectFromImports(name) { scope, _ -> scope.getContributedFunctions(name, location) }.orEmpty()
+        }
     }
 
     override fun getContributedDescriptors(
