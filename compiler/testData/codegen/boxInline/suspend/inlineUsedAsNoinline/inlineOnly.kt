@@ -33,7 +33,7 @@ import kotlin.coroutines.experimental.*
 import kotlin.coroutines.experimental.intrinsics.*
 
 fun builder(c: suspend () -> Unit) {
-    val continuation = object: ContinuationAdapter<Unit> {
+    val continuation = object: helpers.ContinuationAdapter<Unit>() {
         override val context: CoroutineContext
             get() = EmptyCoroutineContext
 
