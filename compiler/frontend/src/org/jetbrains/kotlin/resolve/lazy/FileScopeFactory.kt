@@ -16,6 +16,7 @@
 
 package org.jetbrains.kotlin.resolve.lazy
 
+import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.Annotations
@@ -44,14 +45,18 @@ class FileScopeFactory(
     private val bindingTrace: BindingTrace,
     private val ktImportsFactory: KtImportsFactory,
     private val platformToKotlinClassMap: PlatformToKotlinClassMap,
-    private val defaultImportProvider: DefaultImportProvider,
     private val targetPlatform: TargetPlatform,
     private val languageVersionSettings: LanguageVersionSettings,
     private val deprecationResolver: DeprecationResolver
 ) {
     /* avoid constructing psi for default imports prematurely (time consuming in some scenarios) */
     private val defaultImports by storageManager.createLazyValue {
-        ktImportsFactory.createImportDirectivesNotCached(defaultImportProvider.defaultImports)
+        ktImportsFactory.createImportDirectivesNotCached(
+            targetPlatform.getDefaultImports(
+                languageVersionSettings.supportsFeature(LanguageFeature.DefaultImportOfPackageKotlinComparisons),
+                includeLowPriorityImports = false
+            )
+        )
     }
 
     private val defaultLowPriorityImports by storageManager.createLazyValue {

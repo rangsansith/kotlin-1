@@ -163,7 +163,8 @@ private fun renderImportName(fqName: FqName, isOnDemand: Boolean)
 
 private val DEFAULT_IMPORTS_SET: Set<FqName> = JvmPlatform.getDefaultImports(
     // TODO: use the correct LanguageVersionSettings instance here
-    LanguageVersionSettingsImpl.DEFAULT.supportsFeature(LanguageFeature.DefaultImportOfPackageKotlinComparisons)
-).plus(JvmPlatform.defaultLowPriorityImports).filter { it.isAllUnder }.map { it.fqName }.toSet()
+    LanguageVersionSettingsImpl.DEFAULT.supportsFeature(LanguageFeature.DefaultImportOfPackageKotlinComparisons),
+    includeLowPriorityImports = true
+).filter { it.isAllUnder }.map { it.fqName }.toSet()
 
 private fun isImportedByDefault(c: KtLightClass) = c.qualifiedName?.let { FqName(it).parent() } in DEFAULT_IMPORTS_SET

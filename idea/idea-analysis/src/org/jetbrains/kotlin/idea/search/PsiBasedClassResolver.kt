@@ -261,6 +261,8 @@ private fun KtFile.getDefaultImports(): List<ImportPath> {
     val moduleInfo = getNullableModuleInfo() ?: return emptyList()
     val versionSettings = IDELanguageSettingsProvider.getLanguageVersionSettings(moduleInfo, project)
     val platform = TargetPlatformDetector.getPlatform(this)
-    return platform.getDefaultImports(versionSettings.supportsFeature(LanguageFeature.DefaultImportOfPackageKotlinComparisons)) +
-            platform.defaultLowPriorityImports
+    return platform.getDefaultImports(
+        versionSettings.supportsFeature(LanguageFeature.DefaultImportOfPackageKotlinComparisons),
+        includeLowPriorityImports = true
+    )
 }
